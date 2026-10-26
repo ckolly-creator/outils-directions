@@ -1,0 +1,857 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ma boussole pédagogique</title>
+<style>
+:root{--bg:#faf8f4;--ink:#2d3340;--mut:#5d6575;--card:#fff;--ac:#4c6a8a}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif}
+main{max-width:860px;margin:0 auto;padding:14px 16px 60px}
+h1{font-size:2rem;margin:.2em 0;letter-spacing:.02em}
+h2{font-size:1.3rem;margin:1.4em 0 .5em}
+h3{font-size:1.1rem}
+.sub{color:var(--mut);font-style:italic}
+.screen{display:none;animation:in .4s ease}.screen.on{display:block}
+@keyframes in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+.card{background:var(--card);border-radius:20px;padding:20px;box-shadow:0 2px 12px #0001;margin:16px 0}
+input[type=text],select,textarea{width:100%;font:inherit;padding:12px;border:2px solid #cfd5df;border-radius:12px;background:#fff;color:var(--ink)}
+textarea{min-height:110px;resize:vertical}
+label{font-weight:600;display:block;margin:14px 0 6px}
+button{font:inherit;font-weight:600;border:0;border-radius:999px;padding:12px 22px;background:var(--ac);color:#fff;cursor:pointer;margin:4px 6px 4px 0}
+button.sec{background:#e6e9ef;color:var(--ink)}
+button:disabled{opacity:.45;cursor:not-allowed}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,summary:focus-visible{outline:3px solid #1f5fbf;outline-offset:2px}
+
+/* Navigation entre les étapes */
+.steps{display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 14px;padding:0;list-style:none}
+.steps button{margin:0;padding:8px 14px;font-size:.88rem;background:#e6e9ef;color:var(--ink)}
+.steps button[aria-current=step]{background:var(--ac);color:#fff}
+.time{background:#fff;border-radius:14px;padding:10px 14px;border:1px solid #e1e5ec;font-size:.95rem}
+
+/* Curseurs */
+.ax{border-radius:20px;padding:16px 18px;margin:14px 0;background:var(--c);border:2px dashed #0003;transition:.3s}
+.ax.done{border:2px solid transparent;box-shadow:0 2px 10px #0002}
+.ends{display:flex;justify-content:space-between;gap:8px;font-weight:700}
+.ends span{display:flex;align-items:center;gap:8px}
+.ico{width:38px;height:38px;border-radius:50%;background:#fff9;display:inline-grid;place-items:center;font-size:1.2rem}
+.ends .r{text-align:right;flex-direction:row-reverse}
+input[type=range]{width:100%;margin:14px 0 4px;-webkit-appearance:none;appearance:none;height:12px;border-radius:99px;background:#fff;outline-offset:6px}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:30px;height:30px;border-radius:50%;background:var(--ac);border:4px solid #fff;box-shadow:0 1px 6px #0004;cursor:grab;transition:transform .15s}
+input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;background:var(--ac);border:4px solid #fff;cursor:grab}
+.ax:not(.done) input[type=range]::-webkit-slider-thumb{background:#9aa3b2}
+.ax:not(.done) input[type=range]::-moz-range-thumb{background:#9aa3b2}
+.gscale{position:relative;height:56px;margin:2px 0 6px}
+button.gb{position:absolute;top:0;width:62px;transform:translateX(-50%);margin:0;padding:2px 0;background:none;color:var(--mut);font-size:.72rem;font-weight:600;line-height:1.2;border-radius:10px;text-align:center}
+button.gb::before{content:"";display:block;width:12px;height:12px;border-radius:50%;background:#fff;border:2px solid #0005;margin:0 auto 5px;transition:.2s}
+button.gb:hover{color:var(--ink)}
+button.gb.on{color:var(--ink)}
+button.gb.on::before{background:var(--ac);border-color:var(--ac);transform:scale(1.35)}
+.gexp{background:#ffffffb3;border-radius:12px;padding:8px 12px;margin:2px 0 8px;font-size:.93rem;min-height:3.1em}
+.d{color:var(--mut);margin:4px 0 0;font-size:.95rem}
+.mid{font-size:.85rem;padding:6px 14px;margin:10px 0 0;background:#fff9;color:var(--ink)}
+.prog{position:sticky;top:0;background:var(--bg);padding:10px 0;font-weight:700;z-index:5}
+.bar{height:8px;background:#e3e6ec;border-radius:9px;overflow:hidden}.bar i{display:block;height:100%;background:var(--ac);width:0;transition:width .4s}
+
+/* Résultats */
+.row{margin:14px 0;page-break-inside:avoid;break-inside:avoid}
+.trk{position:relative;height:14px;border-radius:99px;background:var(--c);margin:6px 0}
+.trk b{position:absolute;top:-5px;width:24px;height:24px;border-radius:50%;background:var(--ac);border:4px solid #fff;box-shadow:0 1px 4px #0005;transform:translateX(-50%)}
+.lbl{display:flex;justify-content:space-between;font-size:.9rem;font-weight:600}
+.com{border-left:6px solid var(--c);padding:6px 0 6px 14px;margin:14px 0;break-inside:avoid;page-break-inside:avoid}
+.com h3{margin:0 0 4px;font-size:1.05rem}
+.com p{margin:.4em 0}
+.com .ex{font-size:.93rem;color:#3d4656;background:#faf8f4;border-radius:8px;padding:6px 10px}
+#brief ul{margin:.4em 0 0;padding-left:1.2em}
+#brief li{margin:.35em 0}
+.quote{border:2px solid var(--ac);border-radius:16px;padding:18px;text-align:center;font-size:1.15rem;font-style:italic;margin:26px 0;break-inside:avoid}
+.note{font-size:.88rem;color:var(--mut)}
+.psee{display:none}
+.phead{display:none}
+
+/* Mon prochain petit pas */
+#acts{border:2px dashed #cfd5df;border-radius:16px;margin:14px 0;padding:6px 16px 12px;background:#fdfcfa}
+#acts legend{font-weight:700;padding:0 8px}
+#acts h4{margin:14px 0 6px;font-size:.98rem}
+label.act{display:flex;gap:10px;align-items:flex-start;font-weight:400;margin:4px 0;padding:8px 10px;border-radius:12px;cursor:pointer;transition:.2s}
+label.act:hover{background:#f1f3f7}
+label.act.ck{background:#e8f0f8}
+label.act input{width:20px;height:20px;margin-top:2px;flex:none;accent-color:var(--ac)}
+.chosen{border:2px solid var(--ac);border-radius:16px;padding:12px 16px;margin:14px 0;background:#f3f7fb}
+.chosen[hidden]{display:none}
+.chosen p{margin:.3em 0}
+.chI{border-top:1px solid #cfd8e3;padding-top:6px;margin-top:8px}
+details.aide{background:#fdfcfa;border:2px dashed #cfd5df;border-radius:14px;padding:8px 14px;margin:14px 0 4px}
+details.aide summary{cursor:pointer;font-weight:700}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
+.chips button{margin:0;padding:6px 12px;font-size:.85rem}
+
+/* 10 idées */
+.ideas{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:12px 0}
+@media (max-width:700px){.ideas{grid-template-columns:1fr}}
+article.idea{position:relative;background:var(--c);border:3px solid transparent;border-radius:18px;padding:12px 14px;transition:.25s}
+article.idea label{margin:0;font-weight:400;cursor:pointer;display:block}
+article.idea .sr{position:absolute;opacity:0;width:1px;height:1px}
+article.idea:hover{box-shadow:0 2px 10px #0002}
+article.idea:focus-within{outline:3px solid #1f5fbf;outline-offset:2px}
+article.idea.sel{border-color:var(--ac);box-shadow:0 3px 12px #0003;background:#fff}
+article.idea .tg{display:block;font-size:.74rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#3d4656}
+article.idea .tt{display:block;font-size:1.05rem;margin:3px 0}
+article.idea .df{display:block;font-size:.93rem;margin-bottom:6px}
+article.idea .ob{display:block;font-size:.85rem;color:#3d4656}
+article.idea:not(.sel):not(.done) .choose{display:none}
+article.idea .choose{margin:10px 0 0}
+article.idea .badge{position:absolute;top:10px;right:12px;background:var(--ac);color:#fff;font-size:.72rem;font-weight:700;border-radius:99px;padding:2px 10px}
+article.idea.done .tg{padding-right:90px}
+
+/* Onglets et parcours axe par axe */
+.tabs{display:flex;gap:6px;margin:0 0 12px;background:#e6e9ef;border-radius:999px;padding:4px}
+.tabs button{flex:1;margin:0;background:none;color:var(--ink);padding:10px 12px;font-size:.95rem}
+.tabs button.on{background:var(--ac);color:#fff}
+fieldset.xchoose{border:0;padding:0;margin:14px 0}
+fieldset.xchoose legend{font-weight:700;padding:0;margin-bottom:8px}
+.xgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media (max-width:700px){.xgrid{grid-template-columns:1fr}.tabs button{font-size:.82rem;padding:8px 6px}}
+label.xc{display:flex;gap:10px;align-items:flex-start;background:var(--c);border:3px solid transparent;border-radius:16px;padding:10px 12px;margin:0;cursor:pointer;font-weight:400;transition:.2s}
+label.xc.on{border-color:var(--ac);box-shadow:0 2px 10px #0002}
+label.xc small{display:block;color:#3d4656;margin-top:2px}
+label.xc input{width:20px;height:20px;accent-color:var(--ac);flex:none;margin-top:3px}
+.xnav{display:flex;flex-wrap:wrap;gap:6px;margin:14px 0}
+.xnav button{margin:0;padding:8px 14px;font-size:.88rem;background:var(--c);color:var(--ink);border:2px solid transparent}
+.xnav button[aria-current=true]{border-color:var(--ac);font-weight:700}
+#xmain h2{margin-top:1.2em}
+#xprint{display:none}
+.pbox{border:1px solid #bbb;border-radius:8px;padding:8px;white-space:pre-wrap;min-height:50px}
+
+@media print{
+ @page{size:A4;margin:14mm}
+ body{background:#fff;font-size:10.5pt;line-height:1.4}
+ .noprint,.screen:not(#s3){display:none!important}
+ #s3{display:block!important;animation:none}
+ main{padding:0;max-width:none}
+ .card{box-shadow:none;border:1px solid #ddd;break-inside:avoid}
+ .psee{display:block;white-space:pre-wrap;border:1px solid #bbb;border-radius:8px;padding:8px;min-height:50px}
+ .pedit{display:none}
+ .phead{display:block}
+ fieldset#acts.none,#acts .grp.empty,#acts .note{display:none}
+ #acts label.act:not(.ck){display:none}
+ #acts{border:1px solid #bbb;break-inside:avoid}
+ label.act.ck{background:none}
+ .chosen{break-inside:avoid;background:none}
+ .chosen[hidden]{display:none}
+ *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+ body.xp #xprint{display:block!important}
+ body.xp #s3,body.xp #sx{display:none!important}
+ #xprint h2{margin:.3em 0}
+ /* version synthétique : une seule page */
+ body.short{font-size:9.5pt;line-height:1.3}
+ body.short .full{display:none!important}
+ body.short h1{font-size:1.45rem;margin:.1em 0}
+ body.short h2{font-size:1.05rem;margin:.8em 0 .3em}
+ body.short .card{padding:10px 14px;margin:8px 0;border-radius:12px}
+ body.short .row{margin:7px 0}
+ body.short .psee{min-height:32px;padding:5px}
+ body.short label{margin:7px 0 3px}
+ body.short .quote{margin:12px 0;padding:10px;font-size:1rem}
+ body.short .sub,body.short .note{margin:.3em 0}
+}
+</style>
+</head>
+<body>
+<main>
+
+<div class="tabs noprint" role="tablist" aria-label="Choix du parcours">
+ <button type="button" role="tab" data-t="1" class="on" aria-selected="true">Boussole complète · 6 axes</button>
+ <button type="button" role="tab" data-t="2" aria-selected="false">Axe par axe · 1, 3 ou plus</button>
+</div>
+
+<nav class="noprint" id="stepsnav" aria-label="Étapes de la boussole">
+ <ol class="steps" id="steps">
+  <li><button type="button" data-s="1">1 · Prénom</button></li>
+  <li><button type="button" data-s="2">2 · Curseurs</button></li>
+  <li><button type="button" data-s="3">3 · Mon profil</button></li>
+  <li><button type="button" data-s="4">4 · Mon petit pas</button></li>
+ </ol>
+</nav>
+
+<section id="s1" class="screen on" aria-labelledby="t1">
+ <h1 id="t1">MA BOUSSOLE PÉDAGOGIQUE</h1>
+ <p class="sub">Six équilibres pour explorer mon identité professionnelle.</p>
+ <div class="card">
+  <h2 style="margin-top:0">Bienvenue dans ta boussole pédagogique !</h2>
+  <p>« Dans notre métier, nous cherchons constamment des équilibres entre des valeurs qui se complètent. Où places-tu ton curseur aujourd’hui ? Explore tes préférences et découvre ton portrait pédagogique. »</p>
+  <p class="time"><strong>⏱ Durée estimée : environ 10 à 15 minutes.</strong> Compte 5 minutes pour positionner tes six curseurs, puis le temps de lire ton profil et de choisir ton prochain petit pas.</p>
+  <label for="prenom">Ton prénom</label>
+  <input type="text" id="prenom" autocomplete="off" required aria-required="true" placeholder="Ton prénom">
+  <p><button id="go" disabled>Découvrir ma boussole</button></p>
+  <p class="note">Seul ton prénom est demandé. Rien n’est transmis ni enregistré : tout reste dans ton navigateur. Tu peux circuler entre les étapes sans perdre tes réponses.</p>
+ </div>
+</section>
+
+<section id="s2" class="screen" aria-labelledby="t2">
+ <h1 id="t2">Tes six équilibres</h1>
+ <p class="sub">Déplace chaque curseur selon ta préférence du moment, ou clique sur l’un des cinq repères. Pour choisir l’équilibre, clique sur « Je choisis l’équilibre ».</p>
+ <div class="prog" aria-live="polite"><span id="progt">0 axe sur 6 complété</span><div class="bar"><i id="progb"></i></div></div>
+ <div id="axes"></div>
+ <p><button id="valid" disabled>Découvrir mon profil pédagogique</button></p>
+</section>
+
+<section id="s3" class="screen" aria-labelledby="t3">
+ <div class="phead"><strong>MA BOUSSOLE PÉDAGOGIQUE</strong> — <span id="pdate"></span></div>
+ <h1 id="t3"></h1>
+ <p class="sub">Voici ce que tes choix révèlent de tes préférences professionnelles du moment.</p>
+ <h2>En bref</h2>
+ <div class="card" id="brief"></div>
+ <h2>Tes six positionnements</h2>
+ <div class="card" id="chart"></div>
+ <div class="full">
+  <h2>Analyse de tes six axes</h2>
+  <div id="coms"></div>
+  <h2>Ce qui caractérise ta boussole aujourd’hui</h2>
+  <div class="card" id="synth"></div>
+ </div>
+ <p class="note">Cette boussole reflète tes préférences du moment. Elle ne constitue ni une évaluation ni un diagnostic professionnel.</p>
+
+ <h2 id="pas">ET MAINTENANT, JE FAIS ÉVOLUER MA BOUSSOLE !</h2>
+ <div class="card">
+  <p><strong>Une question pour toi :</strong></p>
+  <p id="quest" style="font-size:1.1rem"></p>
+  <h3>MON PROCHAIN PETIT PAS</h3>
+  <p><strong>À la suite de cette découverte, quel petit déplacement de curseur souhaiterais-tu expérimenter dans ta pratique ?</strong></p>
+  <label for="f1">L’axe que je souhaite explorer davantage</label>
+  <select id="f1" class="pedit"></select><div class="psee" id="p1"></div>
+  <fieldset id="acts" class="none full"></fieldset>
+  <div class="chosen" id="chosen" hidden></div>
+  <details class="aide noprint">
+   <summary>Besoin d’aide pour formuler ton intention ?</summary>
+   <p>Une intention concrète répond à trois questions : <strong>Quoi ?</strong> (une action simple), <strong>Quand ?</strong> (dans quelle leçon ou sur quelle période) et <strong>Pourquoi ?</strong> (ce que j’espère faire évoluer chez mes élèves).</p>
+   <p class="note">Clique sur un début de phrase pour l’ajouter à la suite de ton texte. Rien n’est jamais effacé.</p>
+   <div class="chips">
+    <button type="button" class="sec" data-ins="Dans les prochains jours, je vais ">Dans les prochains jours, je vais…</button>
+    <button type="button" class="sec" data-ins="Pendant une leçon de ">Pendant une leçon de…</button>
+    <button type="button" class="sec" data-ins="Je vais proposer aux élèves de ">Je vais proposer aux élèves de…</button>
+    <button type="button" class="sec" data-ins="Je commencerai par ">Je commencerai par…</button>
+    <button type="button" class="sec" data-ins="afin de ">…afin de…</button>
+   </div>
+   <p><button type="button" class="sec" id="tpl">Insérer un modèle complet</button></p>
+  </details>
+  <label for="f2">Mon intention pédagogique</label>
+  <textarea id="f2" class="pedit" placeholder="Par exemple : Je souhaite laisser davantage de choix aux élèves dans la manière de réaliser une activité, tout en clarifiant les objectifs attendus."></textarea><div class="psee" id="p2"></div>
+  <label for="f3">Comment saurai-je que mon expérimentation a été utile ? (facultatif)</label>
+  <textarea id="f3" class="pedit" placeholder="Par exemple : Les élèves font des choix plus autonomes et sont capables d’expliquer les raisons de leurs décisions."></textarea><div class="psee" id="p3"></div>
+  <div class="full">
+   <label for="f4">Après mon expérimentation : qu’ai-je observé ? Qu’est-ce que je garde, j’ajuste ou j’abandonne ? (facultatif)</label>
+   <textarea id="f4" class="pedit" placeholder="À compléter plus tard, une fois l’expérimentation menée en classe."></textarea><div class="psee" id="p4"></div>
+  </div>
+ </div>
+
+ <div class="card noprint" id="ideas">
+  <h3 style="margin-top:0">10 IDÉES POUR FAIRE BOUGER MA BOUSSOLE</h3>
+  <p>« Tu aimerais faire évoluer une petite partie de ta pratique, mais tu ne sais pas par où commencer ? Voici dix actions concrètes inspirées de tes choix. Sélectionne celle qui te donne envie d’essayer ! »</p>
+  <div class="ideas" id="ideaList" role="radiogroup" aria-label="Dix idées à essayer"></div>
+  <p class="note">Ces idées sont des pistes, pas des corrections. Tu peux en retenir plusieurs : elles s’ajoutent à ton intention, que tu peux modifier librement. Tu peux aussi les ignorer.</p>
+  <p><button type="button" class="sec" id="own">Je préfère rédiger ma propre intention</button></p>
+ </div>
+
+ <div class="quote">« Ma boussole n’indique pas où je dois être, mais m’aide à réfléchir à la direction que je souhaite prendre. »</div>
+ <div class="noprint">
+  <button id="pdf">Télécharger ma boussole et mon intention pédagogique (PDF complet)</button>
+  <button id="pdfs" class="sec">Télécharger la version synthétique (1 page)</button>
+  <button id="prt" class="sec">Imprimer mon profil</button>
+  <button id="mod" class="sec">Modifier mes choix</button>
+  <button id="rst" class="sec">Recommencer</button>
+  <p class="note">Pour le PDF : dans la fenêtre d’impression, choisis « Enregistrer au format PDF » comme destination (A4).</p>
+ </div>
+</section>
+
+<section id="sx" class="screen" aria-labelledby="tx">
+ <h1 id="tx">Un axe à la fois</h1>
+ <p class="sub">Tu n’as pas envie de parcourir les six axes ? Choisis-en un, trois… ou davantage, puis avance axe par axe : positionnement, portrait, idées et petit pas.</p>
+ <div class="card">
+  <label for="xname" style="margin-top:0">Ton prénom</label>
+  <input type="text" id="xname" autocomplete="off" placeholder="Ton prénom">
+  <p class="note" id="xgate">Saisis ton prénom pour commencer. Rien n’est transmis ni enregistré : tout reste dans ton navigateur.</p>
+ </div>
+ <fieldset class="xchoose"><legend>Choisis les axes que tu souhaites explorer (un seul, quelques-uns ou les six)</legend><div class="xgrid" id="xch"></div></fieldset>
+ <div id="xmain" hidden>
+  <div class="xnav" id="xnav" role="group" aria-label="Axes choisis"></div>
+  <div id="xpanel"></div>
+  <div class="noprint" id="xactions">
+   <button id="xpdf">Télécharger mes axes (PDF complet)</button>
+   <button id="xpdfs" class="sec">Version synthétique</button>
+   <button id="xprt" class="sec">Imprimer</button>
+   <button id="xrst" class="sec">Recommencer cet onglet</button>
+   <p class="note">Le document reprend uniquement les axes que tu as positionnés. Dans la fenêtre d’impression, choisis « Enregistrer au format PDF » (A4).</p>
+  </div>
+ </div>
+</section>
+<div id="xprint"></div>
+</main>
+
+<script>
+const GL=["Très marquée","Plutôt","Équilibre","Plutôt","Très marquée"];
+const A=[
+{l:"Bienveillance",r:"Exigence",c:"#f6d3dc",i:["💗","💎"],d:"Une école exigeante dans les apprentissages, mais bienveillante dans les relations.",
+p:["un climat relationnel bienveillant","des attentes élevées envers les élèves"],
+q:["Comment pourrais-tu renforcer tes attentes envers les élèves tout en préservant le climat de confiance ?","Quelle place pourrais-tu donner davantage au droit à l’erreur dans tes pratiques ?"],
+g:[["Bienveillance marquée","Le climat de confiance passe avant tout : l’erreur est accueillie sans jugement et les attentes s’ajustent d’abord à l’élève."],
+ ["Plutôt bienveillance","Tu soignes la relation en premier, tout en posant quelques attentes claires."],
+ ["Équilibre","Tu tiens ensemble la chaleur de la relation et le niveau d’attente, selon les situations."],
+ ["Plutôt exigence","Tu vises la progression et l’effort, en veillant à rester encourageant."],
+ ["Exigence marquée","La qualité du travail et le dépassement de soi guident ta pratique ; tu attends beaucoup de chacun."]],
+t:[`Tu privilégies un climat relationnel sécurisant, dans lequel les élèves peuvent apprendre sans craindre de se tromper. Cette posture favorise la confiance et l’engagement. Ton défi pourrait être de veiller à ce que cette attention au bien-être s’accompagne d’attentes suffisamment ambitieuses pour chacun.`,
+`Tu accordes une place importante à la relation, tout en posant des attentes claires. Cette posture soutient la motivation des élèves. Tu pourrais te demander dans quelles situations tu hésites à montrer davantage d’exigence.`,
+`Tu recherches un équilibre entre des attentes ambitieuses et une relation pédagogique bienveillante. Tu considères que la sécurité affective et l’exigence peuvent se renforcer mutuellement. Le défi consiste à maintenir cet équilibre lorsque les situations deviennent plus complexes.`,
+`Tu valorises l’effort et la progression, tout en gardant le souci d’une relation chaleureuse. Cela encourage la persévérance des élèves. Tu pourrais te demander quelle place tu laisses à l’erreur lorsque les enjeux montent.`,
+`Tu accordes une importance particulière à la qualité des apprentissages et au dépassement de soi. Tu encourages les élèves à progresser et à développer leur persévérance. Ton défi pourrait être de maintenir un climat dans lequel chacun se sent reconnu, indépendamment de ses résultats.`],
+e:["Tu laisses un moment en début de leçon pour que chacun dise comment il se sent, et tu réponds à une erreur par « Raconte-moi comment tu as fait ».",
+"Tu annonces les attendus d’un travail avec un exemple réussi, puis tu commentes d’abord ce qui fonctionne avant de proposer un point à améliorer.",
+"Tu rends un travail avec un point fort, un point à améliorer et un délai de reprise, discutés avec l’élève.",
+"Tu proposes des critères de réussite clairs et tu valorises chaque progrès visible entre deux versions d’un même texte.",
+"Tu fixes des critères précis et tu demandes la reprise d’un travail, en prévoyant un temps pour en parler avec l’élève."]},
+{l:"Liberté",r:"Cadre",c:"#cfe4f5",i:["🕊️","🛡️"],d:"Plus d’autonomie, tout en maintenant un cadre sécurisant et structurant.",
+p:["l’autonomie des élèves","un cadre clair et sécurisant"],
+q:["Dans quelle situation un cadre plus explicite pourrait-il soutenir l’autonomie de tes élèves ?","Quel espace de liberté supplémentaire pourrais-tu offrir à tes élèves ?"],
+g:[["Grande liberté","Les élèves choisissent, s’organisent et expérimentent largement ; tu interviens surtout en soutien."],
+ ["Plutôt liberté","Beaucoup de choix possibles, avec quelques balises pour garder le cap."],
+ ["Équilibre","Tu doses autonomie et structure selon la classe, l’activité et le moment."],
+ ["Plutôt cadre","Des règles et des routines claires, avec des marges de choix bien définies."],
+ ["Cadre solide","Des repères stables et précis sécurisent le groupe ; les consignes et le déroulement sont très structurés."]],
+t:[`Tu crois à la force de l’autonomie : laisser choisir, essayer et s’organiser développe la responsabilité et la créativité. Ton défi pourrait être de repérer les élèves pour qui davantage de repères serait un véritable appui.`,
+`Tu ouvres de larges espaces de choix, avec quelques balises. Cela favorise l’initiative sans perdre les élèves en route. Tu pourrais te demander si ces balises sont toujours assez visibles pour tous.`,
+`Tu cherches à articuler autonomie et structure : un cadre clair peut précisément rendre la liberté possible. Le défi consiste à ajuster ce dosage selon les classes et les moments de l’année.`,
+`Tu t’appuies sur un cadre lisible qui rassure, tout en ménageant des marges de manœuvre. Les élèves savent où ils vont. Tu pourrais te demander quels espaces de choix ouvrir davantage.`,
+`Tu accordes de l’importance à des règles et des routines claires, qui sécurisent le groupe et libèrent l’énergie pour apprendre. Ton défi pourrait être de laisser, à certains moments, une vraie place à l’initiative des élèves.`],
+e:["Pour un travail de la semaine, tu laisses les élèves choisir leur sujet, leur outil et leur rythme, et tu passes de groupe en groupe pour les questionner.",
+"Tu proposes trois manières de présenter un travail et une grille d’étapes que les élèves cochent à leur rythme.",
+"Tu alternes un moment très guidé en début de leçon et un temps de travail où chacun décide de l’ordre de ses tâches.",
+"Tu affiches le déroulement de la leçon et tu laisses un choix limité (ordre des tâches, partenaire, support).",
+"Tu installes des routines d’entrée et de sortie de leçon et tu donnes des consignes en étapes, identiques d’un jour à l’autre."]},
+{l:"Inclusion",r:"Performance",c:"#cdebe0",i:["🤝","📊"],d:"Une école pour toutes et tous, qui maintient un haut niveau d’ambition.",
+p:["l’inclusion de chaque élève","un haut niveau d’ambition"],
+q:["Comment pourrais-tu maintenir des défis ambitieux pour chacun tout en respectant les différences ?","Comment pourrais-tu valoriser davantage les progrès individuels, au-delà des résultats ?"],
+g:[["Inclusion marquée","Que chacun trouve sa place et participe pleinement prime ; les objectifs s’ajustent aux élèves."],
+ ["Plutôt inclusion","Tu adaptes beaucoup, en gardant des objectifs ambitieux comme horizon."],
+ ["Équilibre","Tu cherches à tenir ensemble une école pour toutes et tous et un haut niveau d’ambition."],
+ ["Plutôt performance","Tu vises haut pour la classe, en prévoyant des appuis pour les élèves qui en ont besoin."],
+ ["Performance marquée","Les résultats et l’excellence sont ton moteur ; tu attends un niveau élevé de chacun."]],
+t:[`Tu veux une école où chacune et chacun a sa place, et tu t’adaptes pour que tous puissent participer. C’est une force pour le sentiment d’appartenance. Ton défi pourrait être de garder, pour chaque élève, un défi réellement ambitieux.`,
+`Tu portes une attention forte à la diversité des élèves, avec le souci de garder des objectifs élevés. Cela donne du sens à la différenciation. Tu pourrais te demander comment ajuster les objectifs sans les abaisser.`,
+`Tu cherches à concilier une école pour toutes et tous et une haute ambition, convaincu que l’une n’exclut pas l’autre. Le défi consiste à garder cet équilibre lorsque les écarts entre élèves se creusent.`,
+`Tu tiens à de hauts standards d’apprentissage, tout en restant attentif aux besoins de chacun. Cela stimule la progression. Tu pourrais te demander quels appuis rendraient l’ambition accessible à tous.`,
+`Tu accordes une grande importance à la qualité des résultats et à l’ambition partagée, convaincu que viser haut fait grandir. Ton défi pourrait être de valoriser aussi les progrès individuels, au-delà des résultats.`],
+e:["Tu prépares pour une même leçon des aides à disposition de tous (lexique, schéma, exemple résolu), que chacun prend librement.",
+"Tu proposes la même activité à tous avec trois niveaux d’aide et un défi facultatif pour celles et ceux qui le souhaitent.",
+"Tu fixes un objectif commun et tu décides avec les élèves des appuis nécessaires pour y arriver.",
+"Tu proposes des tâches exigeantes pour la classe, avec un temps d’accompagnement ciblé pour les élèves qui en ont besoin.",
+"Tu fixes un niveau de maîtrise visé pour tous, avec un entraînement régulier et des évaluations qui permettent de mesurer les progrès."]},
+{l:"Innovation",r:"Retour à l’essentiel",c:"#fbefb8",i:["💡","🍃"],d:"Des pratiques innovantes, sans perdre de vue ce qui est fondamental.",
+p:["l’innovation pédagogique","le retour aux fondamentaux"],
+q:["Quelle pratique fondamentale mériterait d’être consolidée avant d’introduire une nouveauté ?","Quelle petite innovation pourrait enrichir une pratique que tu maîtrises déjà ?"],
+g:[["Innovation marquée","Tu testes volontiers de nouveaux outils, dispositifs ou approches, même si cela bouscule les habitudes."],
+ ["Plutôt innovation","Tu essaies régulièrement des nouveautés, en gardant tes bases comme point d’appui."],
+ ["Équilibre","Tu retiens les nouveautés qui servent les apprentissages et tu conserves ce qui a fait ses preuves."],
+ ["Plutôt essentiel","Tu t’appuies sur des pratiques éprouvées et n’intègres une nouveauté qu’après réflexion."],
+ ["Essentiel d’abord","Lire, écrire, compter, raisonner : tu te concentres sur les fondamentaux et des routines stables."]],
+t:[`Tu aimes explorer de nouvelles approches, outils ou dispositifs, ce qui dynamise la classe et ouvre des possibles. Ton défi pourrait être de te demander, pour chaque innovation, ce qu’elle apporte aux apprentissages fondamentaux.`,
+`Tu testes volontiers de nouvelles pratiques tout en t’appuyant sur des bases solides. Cela permet d’avancer sans perdre le cap. Tu pourrais te demander quels critères t’aident à choisir ce qui mérite d’être conservé.`,
+`Tu cherches à innover sans perdre de vue l’essentiel : la nouveauté prend du sens lorsqu’elle sert les apprentissages. Le défi consiste à garder ce juste équilibre quand les sollicitations se multiplient.`,
+`Tu t’appuies sur des pratiques éprouvées, avec une ouverture mesurée à la nouveauté. Cela offre de la stabilité aux élèves. Tu pourrais te demander quelle petite innovation enrichirait une pratique que tu maîtrises déjà.`,
+`Tu privilégies les fondamentaux — lire, écrire, compter, raisonner — et des routines qui ont fait leurs preuves. Ton défi pourrait être de rester curieux de ce que de nouvelles approches apporteraient à certains élèves.`],
+e:["Tu testes une nouvelle application en classe pour un exercice de production, puis tu demandes aux élèves ce qu’elle leur a apporté.",
+"Tu introduis une notion par un jeu ou une enquête, puis tu reviens au cahier pour fixer ce qu’il faut retenir.",
+"Tu gardes tes routines de base et tu testes une nouveauté par période, en comparant ce que chacune apporte.",
+"Tu t’appuies sur des exercices de base qui ont fait leurs preuves, et tu les reprends parfois sous une forme différente.",
+"Tu consacres chaque jour quelques minutes aux automatismes (lecture, calcul, orthographe), avec des routines stables."]},
+{l:"Individualisation",r:"Cohésion collective",c:"#e1d8f3",i:["👤","👥"],d:"Répondre aux besoins de chacun, tout en renforçant le vivre-ensemble.",
+p:["l’individualisation des parcours","la cohésion du groupe"],
+q:["Quelle activité permettrait de renforcer les apprentissages collectifs ?","Comment pourrais-tu mieux prendre en compte les besoins particuliers de certains élèves ?"],
+g:[["Parcours individuels","Chaque élève avance à son rythme, avec des tâches et un soutien sur mesure."],
+ ["Plutôt individualisation","Tu différencies souvent, avec des moments communs pour relier le groupe."],
+ ["Équilibre","Tu alternes travail personnalisé et activités de groupe selon les besoins."],
+ ["Plutôt cohésion","Le groupe est ton moteur : coopération et projets communs, avec des ajustements ciblés."],
+ ["Cohésion marquée","Règles partagées, entraide et sentiment d’appartenance structurent la plupart des apprentissages."]],
+t:[`Tu cherches à répondre aux besoins, aux rythmes et aux intérêts de chaque élève, ce qui favorise la réussite de chacun. Ton défi pourrait être de garder des moments où le groupe construit et apprend ensemble.`,
+`Tu différencies volontiers ton enseignement, tout en soignant la vie du groupe. Chacun se sent reconnu. Tu pourrais te demander quelles activités relieraient davantage ces parcours individuels.`,
+`Tu cherches à tenir ensemble les besoins de chacun et le vivre-ensemble, convaincu que les deux se nourrissent. Le défi consiste à ajuster ce dosage selon les situations et les élèves.`,
+`Tu accordes une grande place à la dynamique de groupe, tout en restant attentif aux besoins particuliers. Cela soutient l’entraide. Tu pourrais te demander quels élèves auraient besoin d’un ajustement plus personnalisé.`,
+`Tu fais du collectif un moteur d’apprentissage : coopération, règles partagées, sentiment d’appartenance. Ton défi pourrait être de veiller à ce que les besoins singuliers de certains élèves restent bien pris en compte.`],
+e:["Tu proposes à chacun un plan de travail avec des objectifs personnels et un court entretien hebdomadaire.",
+"Tu proposes des ateliers à choix qui répondent aux besoins de chacun, avec un moment de partage en fin de leçon.",
+"Tu alternes un temps de travail personnalisé et un temps de projet de groupe dans la même journée.",
+"Tu organises des activités de coopération et tu offres un coup de pouce ciblé à un ou deux élèves pendant la leçon.",
+"Tu fais vivre un conseil de classe, des projets collectifs et des règles construites ensemble pour renforcer le groupe."]},
+{l:"Ouverture",r:"Pilotage efficient",c:"#d6e6d0",i:["🌍","🎯"],d:"Une école ouverte sur le monde, avec une gouvernance claire et des ressources bien mobilisées.",
+p:["l’ouverture sur le monde","un pilotage clair et efficient"],
+q:["Comment pourrais-tu mieux structurer les projets et partenariats que tu développes ?","Quelle nouvelle collaboration pourrait enrichir tes pratiques professionnelles ?"],
+g:[["Ouverture marquée","Partenaires, sorties, projets, familles : tu ouvres largement la classe ou l’école sur l’extérieur."],
+ ["Plutôt ouverture","Tu cultives les projets et les partenariats, avec une organisation qui les soutient."],
+ ["Équilibre","Tu relies ouverture sur le monde et organisation claire des ressources."],
+ ["Plutôt pilotage","Rôles, procédures et ressources sont bien posés ; tu t’ouvres à l’extérieur de façon ciblée."],
+ ["Pilotage marqué","Gouvernance claire, priorités nettes et ressources bien mobilisées sont ta boussole."]],
+t:[`Tu ouvres volontiers la classe ou l’école sur le monde : partenaires, sorties, projets, familles. Ces liens donnent du sens aux apprentissages. Ton défi pourrait être de structurer ces projets pour que les ressources et l’énergie restent bien mobilisées.`,
+`Tu cultives l’ouverture et les projets, avec une organisation qui les soutient. Cela rend les initiatives plus durables. Tu pourrais te demander quels repères supplémentaires faciliteraient leur partage dans l’équipe.`,
+`Tu cherches à concilier ouverture sur l’extérieur et gouvernance claire. Le défi consiste à maintenir cet équilibre quand les projets et les contraintes se multiplient.`,
+`Tu valorises une organisation claire et un usage réfléchi des ressources, avec une ouverture mesurée. Cela donne de la lisibilité à l’équipe. Tu pourrais te demander quelle nouvelle collaboration enrichirait ta pratique.`,
+`Tu accordes de l’importance à une gouvernance claire, à des rôles précis et à des ressources bien mobilisées, qui sécurisent le travail collectif. Ton défi pourrait être de garder des espaces d’ouverture vers l’extérieur et les idées nouvelles.`],
+e:["Tu invites un parent ou une personne de la région à présenter son métier, puis les élèves préparent un projet en lien.",
+"Tu organises une sortie ou une rencontre, en préparant avec les élèves les rôles et le calendrier.",
+"Tu planifies un projet ouvert sur l’extérieur et tu précises avec l’équipe qui fait quoi et pour quand.",
+"Tu utilises un calendrier partagé et des rôles clairs dans l’équipe, et tu retiens un ou deux contacts extérieurs utiles.",
+"Tu tiens un tableau de suivi des projets et des ressources, avec des priorités claires et des échéances réalistes."]}
+];
+
+/* Complémentarités entre axes (clé = indices des deux axes, ordre croissant) */
+const PAIR={
+"0-1":"La relation de confiance et l’espace laissé aux élèves se soutiennent : un climat sûr rend l’autonomie possible, et des attentes claires lui donnent une direction.",
+"0-2":"Ces deux axes parlent d’une même ambition : permettre à chacun de progresser sans se sentir jugé, en alliant sécurité affective et niveau d’attente.",
+"0-3":"La manière d’accueillir l’erreur et le choix des nouveautés s’éclairent mutuellement : une classe où l’on ose se tromper est un terrain favorable pour essayer, et des bases solides donnent confiance.",
+"0-4":"Les relations et le groupe vont de pair : l’attention portée à chaque élève nourrit le vivre-ensemble, et un groupe soudé rend les attentes plus faciles à tenir.",
+"0-5":"Le climat de classe et l’ouverture sur l’extérieur se renforcent : des élèves en confiance osent s’engager dans des projets, qui demandent à leur tour des attentes bien organisées.",
+"1-2":"L’autonomie et l’ambition se rencontrent : un cadre clair permet à chacun de s’engager à son niveau, et la liberté de choix offre à tous des chemins pour atteindre les objectifs.",
+"1-3":"Cadre et nouveauté peuvent se compléter : une structure claire sécurise l’essai de nouvelles pratiques, tandis que la liberté laisse de la place à la créativité.",
+"1-4":"L’organisation de la classe et la place des parcours individuels sont liées : un cadre commun rend possibles des cheminements différents sans perdre le groupe.",
+"1-5":"Autonomie, cadre et ouverture se répondent : des règles lisibles permettent d’ouvrir la classe à des projets et des partenaires tout en gardant le cap.",
+"2-3":"Inclusion, ambition, nouveauté et fondamentaux se rejoignent : de nouvelles approches peuvent aider tous les élèves, à condition que les apprentissages essentiels restent bien visibles.",
+"2-4":"Ces deux axes posent la même question : comment répondre à la diversité des élèves tout en gardant un projet commun ambitieux ?",
+"2-5":"Une école pour toutes et tous et une école ouverte se renforcent : les partenaires extérieurs peuvent enrichir les parcours, et une gouvernance claire garantit que chacun en profite.",
+"3-4":"Innovation et parcours individuels se nourrissent : de nouveaux outils facilitent souvent la différenciation, tandis que des activités communes consolident les bases.",
+"3-5":"Nouveauté et organisation vont de pair : un pilotage clair permet d’intégrer de nouvelles pratiques sans s’éparpiller, et l’ouverture apporte des idées neuves.",
+"4-5":"Parcours individuels, groupe, ouverture et pilotage se rejoignent : bien piloter le temps et les ressources aide à répondre à chacun tout en faisant vivre le collectif."
+};
+
+/* Gestes du quotidien liés à l’axe choisi (cases à cocher) */
+const ACT=[
+[["Accueillir chaque élève par un mot ou un regard personnel en début de journée.","Réagir à une erreur par une question (« Comment as-tu pensé ? ») plutôt que par une correction immédiate.","Souligner chaque jour un effort ou un progrès précis d’un élève.","Prendre deux minutes pour échanger avec un élève plus en retrait.","Formuler une remarque difficile en commençant par ce qui fonctionne."],
+ ["Annoncer les critères de réussite avant chaque activité.","Demander à un élève de reprendre et d’améliorer un travail avant de le rendre.","Fixer une attente un peu plus haute pour un élève qui réussit facilement.","Terminer une séquence par un court retour sur ce qui reste à consolider.","Rappeler les attentes de soin et de délai, et les tenir jusqu’au bout."]],
+[["Proposer deux ou trois manières de réaliser une même tâche, au choix.","Laisser les élèves décider de l’ordre dans lequel ils traitent leurs activités.","Offrir un temps de travail libre ou de projet personnel dans la journée.","Poser une question ouverte plutôt que donner la marche à suivre.","Confier à un élève l’animation d’un moment de la classe."],
+ ["Afficher le déroulement de la journée ou de la leçon.","Reprendre brièvement une règle de classe avant une activité qui en a besoin.","Donner une consigne en étapes claires, avec un exemple.","Installer ou consolider un rituel d’entrée et de fin de leçon.","Rendre visible le temps imparti à une tâche (minuteur, repère au tableau)."]],
+[["Prévoir un appui (aide-mémoire, outil, reformulation) pour un élève qui en a besoin.","Varier les modes de réponse : oral, schéma, dessin, écrit.","Former des groupes où chacun a un rôle utile.","Vérifier qu’aucun élève n’est resté sans participer pendant la leçon.","Adapter la quantité ou le rythme d’une tâche sans en réduire l’objectif."],
+ ["Proposer une tâche « défi » facultative pour celles et ceux qui veulent aller plus loin.","Fixer un objectif d’apprentissage précis et y revenir en fin de leçon.","Demander aux élèves de justifier leur réponse ou leur démarche.","Faire corriger et retravailler une production pour viser une meilleure maîtrise.","Expliciter le niveau attendu et les moyens d’y parvenir."]],
+[["Essayer un nouvel outil numérique pour une activité.","Tester une nouvelle manière d’introduire une notion.","Inviter les élèves à proposer une autre façon de présenter leur travail.","Observer la pratique d’un collègue et retenir une idée à essayer.","Remplacer une fois une activité habituelle par une version différente (jeu, enquête, défi)."],
+ ["Consacrer quelques minutes par jour aux automatismes (lire, écrire, calculer).","Revenir à l’objectif de la leçon : « Qu’est-ce qu’on doit retenir ? ».","Reprendre une notion fondamentale à l’aide d’un exemple simple.","Garder une routine éprouvée plutôt qu’ajouter une nouveauté.","Terminer la journée par une courte synthèse des apprentissages clés."]],
+[["Proposer plusieurs niveaux de difficulté pour une même activité.","Échanger quelques minutes avec un élève sur ses besoins et son rythme.","Prévoir un plan de travail avec des objectifs personnels.","Observer un élève pendant une activité et noter ce qui l’aide.","Aménager un moment où chacun travaille sur son point à consolider."],
+ ["Lancer une activité de coopération où le résultat dépend de tous.","Instaurer un court moment collectif (cercle, conseil de classe, discussion).","Valoriser une réussite du groupe plutôt que celle d’un seul élève.","Changer la composition des groupes au fil de la semaine.","Rappeler une règle du vivre-ensemble et lui redonner du sens avec les élèves."]],
+[["Relier une notion à un exemple de la vie quotidienne ou de la région.","Inviter une personne extérieure ou un parent à partager un savoir.","Prévoir une activité ou une sortie hors de la classe.","Partager une réalisation d’élèves avec un public (autre classe, familles).","Échanger avec un collègue d’une autre classe ou école autour d’une idée."],
+ ["Planifier la semaine avec des priorités claires et un temps réservé aux imprévus.","Préciser qui fait quoi, et pour quand, dans un projet.","Utiliser un seul canal partagé pour communiquer avec l’équipe ou les familles.","Prendre cinq minutes en fin de journée pour faire le point et préparer le lendemain.","Vérifier le matériel, le temps et la salle nécessaires avant de lancer une activité."]]
+];
+
+/* Banque de 60 idées : B[axe][pôle 0/1][5 actions] — t = titre, d = description, o = ce que tu pourrais observer */
+const B=[
+[[{t:"Le mot qui encourage",d:"Écrire chaque jour un court commentaire positif et précis sur le travail d’un élève différent. Le remettre en main propre ou le coller dans son cahier.",o:"les élèves relisent ces mots et osent davantage montrer leurs productions."},
+  {t:"L’erreur bienvenue",d:"Afficher une erreur anonyme intéressante et la décortiquer ensemble comme une piste de recherche. Remercier l’auteur sans le nommer.",o:"les élèves lèvent la main même quand ils ne sont pas sûrs."},
+  {t:"Cinq minutes pour toi",d:"Prendre cinq minutes pour échanger avec un élève plus discret pendant que la classe travaille. Lui poser une question ouverte sur ce qu’il apprécie ou trouve difficile.",o:"l’élève prend plus facilement la parole ensuite."},
+  {t:"La météo du jour",d:"Proposer en début de journée un geste simple (pouce, carte, couleur) pour dire comment chacun se sent. Adapter ensuite le rythme de la leçon si nécessaire.",o:"tu repères plus vite les élèves qui ont besoin d’un coup de pouce."},
+  {t:"Le bon côté d’abord",d:"Commencer chaque retour sur un travail par ce qui fonctionne, avant de proposer une piste d’amélioration. Se limiter à une seule piste à la fois.",o:"les élèves reprennent plus volontiers leur travail."}],
+ [{t:"Des critères en poche",d:"Co-construire avec les élèves trois critères de réussite avant une production importante. Les laisser visibles pendant tout le travail.",o:"les élèves utilisent les critères pour s’auto-évaluer."},
+  {t:"Version 2",d:"Proposer une deuxième version d’un travail après un retour ciblé. Valoriser l’amélioration entre les deux versions.",o:"les productions gagnent en précision et les élèves acceptent de recommencer."},
+  {t:"Un cran plus haut",d:"Ajouter pour un élève qui réussit facilement une question qui demande de justifier ou d’élargir sa réponse. Lui laisser le choix de la relever.",o:"l’élève reste engagé plus longtemps et formule des explications."},
+  {t:"Mon objectif de la semaine",d:"Inviter chaque élève à choisir un objectif précis à atteindre d’ici vendredi. Faire le point en deux minutes en fin de semaine.",o:"les élèves parlent de leur progression avec des mots précis."},
+  {t:"Le dernier pas",d:"Prévoir en fin de leçon une minute pour vérifier que le travail correspond aux attendus annoncés. Laisser le temps de compléter.",o:"il y a moins de travaux inachevés et plus de soin dans la finition."}]],
+[[{t:"Deux chemins, un but",d:"Proposer deux manières différentes de réaliser une même tâche, avec le même objectif. Laisser chaque élève choisir sa voie.",o:"les élèves expliquent pourquoi ils ont choisi leur voie."},
+  {t:"Mon ordre du jour",d:"Donner la liste des tâches du jour et laisser les élèves décider de l’ordre dans lequel les réaliser. Fixer seulement l’heure de fin.",o:"les élèves s’organisent seuls et posent moins de questions sur la consigne."},
+  {t:"Le quart d’heure libre",d:"Réserver un court temps où chacun avance sur un projet de son choix en lien avec le thème. Passer de l’un à l’autre pour poser des questions.",o:"les élèves restent engagés et proposent des idées inattendues."},
+  {t:"La question ouverte",d:"Remplacer une consigne détaillée par une question ouverte qui laisse plusieurs démarches possibles. Comparer ensuite les stratégies utilisées.",o:"tu observes des démarches variées et des justifications plus riches."},
+  {t:"À toi d’animer",d:"Confier à un élève ou à un petit groupe l’animation d’un moment de classe (rituel, jeu, correction). Définir ensemble les quelques règles à respecter.",o:"les élèves prennent leur rôle au sérieux et gagnent en assurance."}],
+ [{t:"Le fil de la journée",d:"Afficher le déroulement de la leçon avec ses étapes principales. Cocher chaque étape à mesure qu’elle est terminée.",o:"les élèves posent moins de questions sur « ce qu’on fait après »."},
+  {t:"La règle en une phrase",d:"Reprendre en une phrase une règle de classe avant une activité qui en a besoin. Demander aux élèves de la reformuler avec leurs mots.",o:"la règle est mieux respectée et moins répétée."},
+  {t:"Consigne en trois temps",d:"Donner une consigne en trois étapes courtes, avec un exemple. Afficher les étapes pendant le travail.",o:"il y a moins de questions de compréhension et plus de temps de travail effectif."},
+  {t:"Le rituel d’entrée",d:"Installer un court rituel identique au début de chaque leçon (lecture, question du jour, calcul mental). Le garder pendant au moins deux semaines.",o:"la classe se met au travail plus vite et plus calmement."},
+  {t:"Le temps en vue",d:"Rendre le temps de travail visible avec un minuteur ou un repère au tableau. Annoncer les étapes de la tâche avec leur durée.",o:"les élèves gèrent mieux leur temps et terminent plus souvent."}]],
+[[{t:"La boîte à aides",d:"Mettre à disposition de toute la classe des aides (lexique, schéma, exemple résolu). Laisser chaque élève décider s’il en a besoin.",o:"des élèves très différents s’en servent sans gêne."},
+  {t:"Plusieurs façons de répondre",d:"Autoriser plusieurs modes de réponse à une même question (oral, schéma, texte). Mettre l’accent sur la qualité de l’idée plutôt que sur la forme.",o:"davantage d’élèves participent, y compris ceux qui hésitent d’habitude."},
+  {t:"Un rôle pour chacun",d:"Composer des groupes où chaque élève a un rôle clair (rapporteur, gardien du temps, vérificateur). Faire tourner les rôles d’une séance à l’autre.",o:"chacun contribue et personne ne reste en retrait."},
+  {t:"Qui a parlé ?",d:"Vérifier en fin de leçon que chaque élève s’est exprimé au moins une fois, en comptant simplement les prises de parole. Le lendemain, donner la parole en priorité à ceux qui ont moins parlé.",o:"la parole est répartie plus équitablement."},
+  {t:"Même but, autre rythme",d:"Adapter la quantité ou le temps accordé à une tâche sans changer l’objectif d’apprentissage. Annoncer clairement que tout le monde vise le même but.",o:"les élèves atteignent l’objectif sans se sentir différents."}],
+ [{t:"Le défi du jour",d:"Proposer une tâche plus ambitieuse en option, ouverte à tous. Valoriser la démarche, qu’elle aboutisse ou non.",o:"plusieurs élèves, parfois inattendus, relèvent le défi."},
+  {t:"Objectif en vue",d:"Écrire l’objectif d’apprentissage au tableau et y revenir en fin de leçon. Demander à chacun s’il est atteint, partiellement atteint ou à retravailler.",o:"les élèves savent dire où ils en sont par rapport à l’objectif."},
+  {t:"Prouve-le !",d:"Demander régulièrement aux élèves de justifier leur réponse en une phrase. Accepter plusieurs façons de justifier.",o:"les explications deviennent plus précises et plus riches."},
+  {t:"Le modèle réussi",d:"Présenter un exemple de travail très bien réussi et en dégager ensemble les qualités. Inviter chacun à choisir une qualité à travailler.",o:"les élèves visent plus haut et savent le dire."},
+  {t:"Dix minutes d’entraînement",d:"Prévoir un court entraînement ciblé sur une compétence à consolider, à la même heure chaque jour. Noter les progrès sur une courbe simple.",o:"les élèves constatent leurs progrès et s’engagent davantage."}]],
+[[{t:"La ressource de la semaine",d:"Tester pendant une semaine une nouvelle ressource ou application déjà disponible à l’école, pour une tâche précise. Recueillir ensuite l’avis des élèves en trois mots.",o:"les élèves disent clairement ce que la ressource leur apporte ou non."},
+  {t:"Entrer par le jeu",d:"Introduire une nouvelle notion par un jeu ou une énigme avant toute explication. Conclure par une synthèse écrite.",o:"l’attention est plus forte et les élèves formulent eux-mêmes la règle."},
+  {t:"La version des élèves",d:"Inviter les élèves à proposer une autre façon de présenter un résultat (affiche, saynète, capsule audio). Choisir ensemble l’une des idées.",o:"les élèves apportent des idées et s’investissent davantage."},
+  {t:"Fenêtre ouverte",d:"Observer une pratique d’un collègue pendant une leçon, ou lui proposer de venir voir la tienne. Retenir une idée à essayer dans la semaine.",o:"tu repars avec une idée précise que tu peux tester rapidement."},
+  {t:"Un lundi différent",d:"Remplacer une fois une activité habituelle par une version différente (enquête, défi, jeu de rôle) avec le même objectif. Comparer ensuite avec la version habituelle.",o:"tu notes ce que la nouveauté change dans l’attention et la compréhension."}],
+ [{t:"Cinq minutes d’automatismes",d:"Consacrer cinq minutes par jour aux automatismes de lecture, d’écriture ou de calcul. Garder une trace simple des progrès.",o:"les élèves gagnent en rapidité et en assurance."},
+  {t:"Ce qu’on retient",d:"Terminer chaque leçon par la question « Qu’est-ce qu’il faut retenir ? ». Écrire ensemble une phrase de synthèse.",o:"les élèves formulent l’essentiel avec leurs propres mots."},
+  {t:"Un exemple simple",d:"Reprendre une notion difficile avec un seul exemple très simple, avant d’ajouter des cas plus complexes. Vérifier la compréhension avant de continuer.",o:"il y a moins d’erreurs sur les cas de base et plus de confiance."},
+  {t:"Le tri des priorités",d:"Choisir trois apprentissages incontournables de la période et vérifier qu’ils sont acquis. Alléger ce qui peut l’être.",o:"tu gagnes du temps et les élèves consolident l’essentiel."},
+  {t:"La routine qui marche",d:"Identifier une routine qui fonctionne bien et la renforcer (la rendre plus visible, la faire expliquer par un élève). La garder stable pendant une période.",o:"la routine devient autonome et demande moins d’interventions."}]],
+[[{t:"Mon plan de travail",d:"Proposer à chaque élève un petit plan de travail avec un objectif personnel pour la semaine. Faire le point en deux minutes en fin de semaine.",o:"les élèves parlent de leurs objectifs et de leur progression."},
+  {t:"Trois niveaux, un thème",d:"Préparer trois niveaux de difficulté d’un même exercice et laisser chacun choisir. Autoriser à changer de niveau en cours de route.",o:"les élèves choisissent un niveau adapté et osent en changer."},
+  {t:"L’entretien express",d:"Prévoir trois minutes d’échange par jour avec un élève sur ses besoins et son rythme. Noter une phrase de ce qu’il dit.",o:"tu découvres des besoins que tu n’avais pas repérés."},
+  {t:"Un élève, un regard",d:"Observer un élève en particulier pendant une activité et noter ce qui l’aide à avancer. Ajuster une pratique en conséquence.",o:"tu identifies une aide simple qui change son engagement."},
+  {t:"L’atelier du point à consolider",d:"Réserver un moment où chacun travaille sur un point à consolider choisi avec toi. Prévoir un court bilan en fin de séance.",o:"chacun sait ce qu’il travaille et pourquoi."}],
+ [{t:"Le défi du groupe",d:"Proposer une activité de coopération où le résultat dépend de la contribution de chacun. Terminer par un retour sur ce qui a fait réussir le groupe.",o:"les élèves s’entraident et disent « nous »."},
+  {t:"Le cercle de parole",d:"Installer un court cercle de parole hebdomadaire pour partager une réussite ou un souci. Définir ensemble les règles d’écoute.",o:"le climat est plus apaisé et les conflits sont plus rares."},
+  {t:"Bravo à la classe",d:"Mettre en avant une réussite collective (entraide, projet terminé, calme retrouvé) plutôt qu’individuelle. L’afficher dans la classe.",o:"les élèves s’en réjouissent et la cohésion se renforce."},
+  {t:"Groupes tournants",d:"Changer la composition des groupes plusieurs fois dans la semaine, selon des critères simples. Terminer par un retour sur la collaboration.",o:"les élèves collaborent avec tous les autres."},
+  {t:"Notre règle, notre sens",d:"Reprendre une règle du vivre-ensemble avec la classe et lui redonner du sens par des exemples concrets. Écrire ensemble une version reformulée.",o:"la règle est mieux respectée parce qu’elle est comprise."}]],
+[[{t:"Dans la vraie vie",d:"Relier une notion de la leçon à un exemple de la vie quotidienne ou de la région. Inviter les élèves à apporter leurs propres exemples.",o:"les élèves font spontanément des liens avec leur environnement."},
+  {t:"L’invité du jour",d:"Inviter un parent ou une personne de la région à présenter pendant dix minutes un métier ou un savoir-faire. Préparer trois questions avec les élèves.",o:"les élèves posent des questions précises et gardent un souvenir marquant."},
+  {t:"Dehors !",d:"Organiser une courte activité en dehors de la classe (cour, quartier, forêt) en lien avec le programme. Donner une mission claire à chaque groupe.",o:"l’engagement et la qualité des observations augmentent."},
+  {t:"Montrer ce qu’on a fait",d:"Présenter une réalisation de la classe à une autre classe ou aux familles. Laisser les élèves choisir ce qu’ils présentent et comment.",o:"les élèves travaillent avec plus de soin et de fierté."},
+  {t:"Une idée d’ailleurs",d:"Échanger avec un collègue d’une autre classe ou école sur une pratique qu’il utilise. Retenir une idée à adapter.",o:"tu rapportes une idée concrète dont l’équipe peut profiter."}],
+ [{t:"La semaine en un coup d’œil",d:"Planifier la semaine avec trois priorités et un temps réservé aux imprévus. Afficher le plan pour les élèves ou l’équipe.",o:"il y a moins de précipitation et davantage de tâches terminées."},
+  {t:"Qui fait quoi ?",d:"Préciser par écrit qui fait quoi, et pour quand, dans un projet en cours. Relire ce tableau lors du prochain point d’équipe.",o:"il y a moins de malentendus et les tâches sont mieux réparties."},
+  {t:"Un seul canal",d:"Choisir un seul canal pour communiquer avec l’équipe ou les familles (agenda, message, tableau partagé). Annoncer ce choix à tous.",o:"les informations circulent mieux et les rappels diminuent."},
+  {t:"Le bilan de cinq minutes",d:"Prendre cinq minutes en fin de journée pour faire le point et préparer le lendemain. Noter une chose à garder et une à ajuster.",o:"les journées démarrent plus sereinement."},
+  {t:"Les ressources d’abord",d:"Vérifier le matériel, le temps et la salle nécessaires avant de lancer une activité. Prévoir une solution de rechange simple.",o:"il y a moins d’imprévus et plus de temps pour les apprentissages."}]]
+];
+const GEN="Dans quelle situation professionnelle récente aurais-tu gagné à privilégier davantage l’une des deux valeurs d’un axe ?";
+const S={name:"",v:A.map(()=>50),t:A.map(()=>false),f1:0,f2:"",f3:"",f4:"",chk:A.map(()=>Array(10).fill(false)),ideas:[]};
+let cur=1;
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const lvl=v=>v<20?0:v<40?1:v<=60?2:v<=80?3:4;
+const dev=i=>Math.abs(S.v[i]-50);
+const side=i=>S.v[i]<50?0:1;
+const ph=i=>A[i].p[side(i)];
+const phX=i=>lvl(S.v[i])===2?`un équilibre entre ${A[i].l.toLowerCase()} et ${A[i].r.toLowerCase()}`:ph(i);
+const order=()=>A.map((_,i)=>i).sort((a,b)=>dev(b)-dev(a)||a-b);
+const lc=s=>s.charAt(0).toLowerCase()+s.slice(1);
+
+/* Navigation entre les étapes */
+function show(id){document.querySelectorAll(".screen").forEach(s=>s.classList.toggle("on",s.id===id));window.scrollTo(0,0);}
+function updNav(){
+ const ok=!!S.name&&S.t.every(Boolean);
+ document.querySelectorAll("#steps button").forEach(b=>{const n=+b.dataset.s;
+  b.disabled=(n===2&&!S.name)||(n>=3&&!ok);
+  if(n===cur)b.setAttribute("aria-current","step");else b.removeAttribute("aria-current");});
+}
+function go(n){
+ if(n===1){cur=1;show("s1");$("prenom").value=S.name;$("go").disabled=!S.name;}
+ else if(n===2){cur=2;buildAxes();show("s2");}
+ else{cur=n===4?4:3;render();show("s3");if(n===4)$("pas").scrollIntoView();}
+ updNav();
+}
+document.querySelectorAll("#steps button").forEach(b=>b.onclick=()=>go(+b.dataset.s));
+
+/* Accueil */
+$("prenom").addEventListener("input",e=>{S.name=e.target.value.trim();$("go").disabled=!S.name;updNav();});
+$("prenom").addEventListener("keydown",e=>{if(e.key==="Enter"&&!$("go").disabled)$("go").click();});
+$("go").onclick=()=>{S.name=$("prenom").value.trim();if(!S.name)return;go(2);};
+
+/* Curseurs */
+function gexp(i,k){const e=$("ge"+i);
+ e.innerHTML=k===null?"Déplace le curseur ou clique sur un repère : son explication s’affiche ici.":`<strong>${A[i].g[k][0]}</strong> — ${A[i].g[k][1]}`;}
+function gr(i){const k=S.t[i]?lvl(S.v[i]):null;
+ for(let j=0;j<5;j++){const b=$("g"+i+"_"+j);b.classList.toggle("on",j===k);b.setAttribute("aria-pressed",j===k?"true":"false");}
+ gexp(i,k);}
+function buildAxes(){
+ $("axes").innerHTML=A.map((a,i)=>`<div class="ax${S.t[i]?" done":""}" id="ax${i}" style="--c:${a.c}">
+ <div class="ends"><span><span class="ico" aria-hidden="true">${a.i[0]}</span>${a.l}</span><span class="r"><span class="ico" aria-hidden="true">${a.i[1]}</span>${a.r}</span></div>
+ <input type="range" id="r${i}" min="0" max="100" step="1" value="${S.v[i]}" aria-label="${esc(a.l)} ou ${esc(a.r)}" aria-describedby="ge${i}" aria-valuetext="${S.t[i]?esc(a.g[lvl(S.v[i])][0]):"pas encore renseigné"}">
+ <div class="gscale" role="group" aria-label="Cinq repères">${[0,25,50,75,100].map((p,k)=>`<button type="button" class="gb" id="g${i}_${k}" style="left:calc(15px + (100% - 30px) * ${p/100})" title="${esc(a.g[k][0])}" aria-label="${esc(a.g[k][0])}">${GL[k]}</button>`).join("")}</div>
+ <p class="gexp" id="ge${i}" aria-live="polite"></p>
+ <p class="d">${a.d}</p>
+ <button class="mid sec" type="button" id="m${i}">Je choisis l’équilibre</button></div>`).join("");
+ A.forEach((a,i)=>{
+  const r=$("r"+i),mark=()=>{S.v[i]=+r.value;S.t[i]=true;$("ax"+i).classList.add("done");r.setAttribute("aria-valuetext",a.g[lvl(S.v[i])][0]);gr(i);prog();};
+  r.addEventListener("input",mark);r.addEventListener("change",mark);
+  r.addEventListener("pointerdown",()=>{if(!S.t[i]){S.t[i]=true;$("ax"+i).classList.add("done");gr(i);prog();}});
+  $("m"+i).onclick=()=>{r.value=50;mark();};
+  for(let k=0;k<5;k++){const b=$("g"+i+"_"+k);
+   b.onclick=()=>{r.value=[0,25,50,75,100][k];mark();};
+   b.onmouseenter=b.onfocus=()=>gexp(i,k);
+   b.onmouseleave=b.onblur=()=>gexp(i,S.t[i]?lvl(S.v[i]):null);}
+  gr(i);
+ });
+ prog();
+}
+function prog(){const n=S.t.filter(Boolean).length;
+ $("progt").textContent=n+" "+(n>1?"axes":"axe")+" sur 6 "+(n>1?"complétés":"complété");
+ $("progb").style.width=(n/6*100)+"%";$("valid").disabled=n<6;updNav();}
+
+/* Profil */
+function pickIdeas(){
+ const o=order(),res=[],eq=i=>lvl(S.v[i])===2;
+ o.forEach((i,r)=>{const k=S.v[i]%5;
+  res.push(eq(i)?{i,pole:i%2,k,eq:true,r:r*2}:{i,pole:1-side(i),k,eq:false,r:r*2});});
+ o.slice(0,4).forEach((i,r)=>{const k=(S.v[i]%5+2)%5;
+  res.push(eq(i)?{i,pole:1-(i%2),k,eq:true,r:r*2+1}:{i,pole:1-side(i),k,eq:false,r:r*2+1});});
+ return res.sort((a,b)=>a.r-b.r);
+}
+function render(){
+ $("t3").textContent="La boussole pédagogique de "+S.name;
+ $("pdate").textContent=S.name+" — "+new Date().toLocaleDateString("fr-CH",{day:"numeric",month:"long",year:"numeric"});
+ const o=order(),marked=o.filter(i=>dev(i)>=15),bal=A.map((_,i)=>i).filter(i=>dev(i)<15);
+ let intro;
+ if(marked.length>=2)intro=`Tu sembles privilégier ${ph(marked[0])}, tout en accordant une place importante à ${ph(marked[1])}.`;
+ else if(marked.length===1)intro=`Tu sembles accorder une place particulière à ${ph(marked[0])}.`;
+ else intro="Tes six positionnements dessinent avant tout des équilibres recherchés, sans tendance dominante : tu sembles adapter ta pédagogie aux situations.";
+ if(bal.length&&marked.length)intro+=` Sur ${bal.map(i=>"l’axe « "+A[i].l+" – "+A[i].r+" »").join(", ")}, tu recherches plutôt l’équilibre.`;
+ intro+=" Ces choix témoignent de ce qui compte pour toi aujourd’hui ; aucune position n’est meilleure qu’une autre.";
+ const pr=[o[0],o[1]].sort((x,y)=>x-y),pair=PAIR[pr[0]+"-"+pr[1]];
+ const quest=marked.length?A[marked[0]].q[side(marked[0])]:GEN;
+ $("brief").innerHTML=`<p>${esc(intro)}</p><ul><li><strong>Une complémentarité :</strong> ${pair}</li><li><strong>Une question à explorer :</strong> ${esc(quest)}</li></ul>`;
+ $("chart").innerHTML=A.map((a,i)=>`<div class="row" style="--c:${a.c}"><div class="lbl"><span>${a.l}</span><span>${a.r}</span></div><div class="trk" role="img" aria-label="${esc(a.l)} – ${esc(a.r)} : ${a.g[lvl(S.v[i])][0]}"><b style="left:${Math.min(97,Math.max(3,S.v[i]))}%"></b></div></div>`).join("");
+ $("coms").innerHTML=A.map((a,i)=>`<div class="com" style="--c:${a.c}"><h3>${a.l} ↔ ${a.r}</h3><p>${a.t[lvl(S.v[i])]}</p><p class="ex"><strong>Exemple de pratique :</strong> ${a.e[lvl(S.v[i])]}</p></div>`).join("");
+ let sy="";
+ if(marked.length>=2)sy+=`<p>Deux tendances ressortent particulièrement : ${ph(marked[0])} et ${ph(marked[1])}.</p>`;
+ else if(marked.length===1)sy+=`<p>Une tendance ressort particulièrement : ${ph(marked[0])}. Tes autres choix dessinent surtout des équilibres.</p>`;
+ else sy+=`<p>Aucun positionnement n’est particulièrement marqué : tu recherches des équilibres sur chacun des six axes.</p>`;
+ sy+=`<p><strong>Une complémentarité :</strong> ${pair} Dans ta boussole, ${phX(pr[0])} et ${phX(pr[1])} se rencontrent : c’est un point d’appui pour avancer.</p>`;
+ sy+=`<p>Une piste de réflexion : à quel moment de ta semaine ces deux dimensions se rencontrent-elles le mieux, et dans quelle situation pourrais-tu les explorer autrement ?</p>`;
+ $("synth").innerHTML=sy;
+ $("quest").textContent=quest;
+ const sel=$("f1");sel.innerHTML=A.map((a,i)=>`<option value="${i}">${a.l} ↔ ${a.r}</option>`).join("");
+ sel.value=S.f1;$("f2").value=S.f2;$("f3").value=S.f3;$("f4").value=S.f4;sync();renderActs();renderChosen();renderIdeas();
+}
+function sync(){
+ $("p1").textContent=A[S.f1].l+" ↔ "+A[S.f1].r;
+ [["p2",S.f2,110],["p3",S.f3,70],["p4",S.f4,90]].forEach(([id,t,h])=>{const e=$(id);e.textContent=t;e.style.minHeight=t.trim()?"":h+"px";});
+}
+function renderActs(){
+ const i=S.f1,a=A[i],box=$("acts");
+ const grp=(side,t)=>`<div class="grp"><h4>${t}</h4>`+ACT[i][side].map((x,k)=>{const n=side*5+k,c=S.chk[i][n];return `<label class="act${c?" ck":""}"><input type="checkbox" data-n="${n}"${c?" checked":""}><span>${x}</span></label>`;}).join("")+`</div>`;
+ box.innerHTML=`<legend>Gestes du quotidien que je souhaite expérimenter</legend><p class="note">Facultatif : coche les gestes qui te parlent. Ils sont répartis de part et d’autre de l’axe, sans qu’un côté soit meilleur que l’autre.</p>`+grp(0,"Pour explorer davantage : "+esc(a.l))+grp(1,"Pour explorer davantage : "+esc(a.r));
+ const upd=()=>{box.classList.toggle("none",!S.chk[i].some(Boolean));box.querySelectorAll(".grp").forEach((g,s)=>g.classList.toggle("empty",!S.chk[i].slice(s*5,s*5+5).some(Boolean)));};
+ box.querySelectorAll("input").forEach(inp=>inp.onchange=()=>{S.chk[i][+inp.dataset.n]=inp.checked;inp.closest(".act").classList.toggle("ck",inp.checked);upd();});
+ upd();
+}
+
+/* Idées retenues (plusieurs possibles) */
+const hasIdea=(i,p,k)=>S.ideas.some(x=>x.i===i&&x.pole===p&&x.k===k);
+function renderChosen(){
+ const c=$("chosen");
+ if(!S.ideas.length){c.hidden=true;c.innerHTML="";return;}
+ c.hidden=false;
+ c.innerHTML=`<p><strong>${S.ideas.length>1?"Idées retenues":"Idée retenue"} :</strong></p>`+S.ideas.map((x,n)=>{const a=B[x.i][x.pole][x.k];
+  return `<div class="chI"><p><strong>« ${esc(a.t)} »</strong> <span class="note">(${esc(A[x.i].l)} ↔ ${esc(A[x.i].r)})</span></p><p>${esc(a.d)}</p><p><em>Tu pourrais observer :</em> ${esc(a.o)}</p><div class="noprint"><button type="button" class="sec" data-use="${n}">Ajouter à mon indice de réussite</button><button type="button" class="sec" data-drop="${n}">Ne plus retenir cette idée</button></div></div>`;}).join("");
+ c.querySelectorAll("[data-use]").forEach(b=>b.onclick=()=>{const x=S.ideas[+b.dataset.use],a=B[x.i][x.pole][x.k];
+  const txt=a.o.charAt(0).toUpperCase()+a.o.slice(1);
+  S.f3=S.f3.trim()?S.f3.replace(/\s+$/,"")+"\n"+txt:txt;$("f3").value=S.f3;sync();});
+ c.querySelectorAll("[data-drop]").forEach(b=>b.onclick=()=>{S.ideas.splice(+b.dataset.drop,1);renderChosen();renderIdeas();});
+}
+function toggleIdea(i,pole,k){
+ if(hasIdea(i,pole,k)){S.ideas=S.ideas.filter(x=>!(x.i===i&&x.pole===pole&&x.k===k));renderChosen();renderIdeas();return;}
+ const a=B[i][pole][k],txt=`Je souhaite expérimenter l’idée « ${a.t} » : ${lc(a.d)}`;
+ S.ideas.push({i,pole,k});
+ S.f2=S.f2.trim()?S.f2.replace(/\s+$/,"")+"\n"+txt:txt;$("f2").value=S.f2;
+ S.f1=i;$("f1").value=i;sync();renderActs();renderChosen();renderIdeas();
+}
+function renderIdeas(){
+ const list=$("ideaList");
+ list.innerHTML=pickIdeas().map(x=>{
+  const a=B[x.i][x.pole][x.k],id=x.i+"-"+x.pole+"-"+x.k,done=hasIdea(x.i,x.pole,x.k),
+   tg=x.eq?`Consolider un équilibre · ${A[x.i].l} ↔ ${A[x.i].r}`:`Explorer · ${A[x.i][x.pole?"r":"l"]}`;
+  return `<article class="idea${done?" done":""}" style="--c:${A[x.i].c}" data-id="${id}"><label><input type="radio" class="sr" name="idea" value="${id}"><span class="tg">${esc(tg)}</span><strong class="tt">${esc(a.t)}</strong><span class="df">${esc(a.d)}</span><span class="ob"><em>Tu pourrais observer :</em> ${esc(a.o)}</span></label><button type="button" class="choose">${done?"Retirer cette idée":"Je choisis cette idée"}</button>${done?`<span class="badge">Idée retenue</span>`:""}</article>`;}).join("");
+ list.querySelectorAll("article").forEach(ar=>{
+  ar.querySelector("input").onchange=()=>{list.querySelectorAll("article").forEach(x=>x.classList.remove("sel"));ar.classList.add("sel");};
+  ar.querySelector(".choose").onclick=()=>{const [i,p,k]=ar.dataset.id.split("-").map(Number);toggleIdea(i,p,k);};
+ });
+}
+
+/* Aide à la rédaction */
+function insTxt(t){const ta=$("f2");
+ if(ta.value&&!/\s$/.test(ta.value))ta.value+=" ";
+ ta.value+=t;S.f2=ta.value;sync();ta.focus();ta.setSelectionRange(ta.value.length,ta.value.length);}
+document.querySelectorAll("[data-ins]").forEach(b=>b.onclick=()=>insTxt(b.dataset.ins));
+$("tpl").onclick=()=>insTxt("Dans [une leçon ou une période], je vais [action concrète] avec mes élèves, afin de [ce que j’espère faire évoluer].");
+
+/* Champs et actions */
+$("f1").onchange=e=>{S.f1=+e.target.value;sync();renderActs();};
+$("f2").oninput=e=>{S.f2=e.target.value;sync();};
+$("f3").oninput=e=>{S.f3=e.target.value;sync();};
+$("f4").oninput=e=>{S.f4=e.target.value;sync();};
+$("own").onclick=()=>{$("f2").scrollIntoView({behavior:"smooth",block:"center"});$("f2").focus({preventScroll:true});};
+$("valid").onclick=()=>go(3);
+function doPrint(mode){
+ const old=document.title;document.title="Ma boussole pédagogique – "+S.name;
+ document.body.classList.toggle("short",mode==="short");
+ const done=()=>{document.body.classList.remove("short");document.title=old;window.removeEventListener("afterprint",done);};
+ window.addEventListener("afterprint",done);
+ window.print();
+}
+$("pdf").onclick=()=>doPrint("full");
+$("pdfs").onclick=()=>doPrint("short");
+$("prt").onclick=()=>doPrint("full");
+$("mod").onclick=()=>go(2);
+$("rst").onclick=()=>{if(!confirm("Tout effacer et recommencer ? Tes positions et tes textes seront perdus."))return;
+ S.name="";S.v=A.map(()=>50);S.t=A.map(()=>false);S.f1=0;S.f2="";S.f3="";S.f4="";S.chk=A.map(()=>Array(10).fill(false));S.ideas=[];
+ $("prenom").value="";go(1);};
+
+/* ===== Onglet 2 : axe par axe ===== */
+const X={sel:A.map(()=>false),v:A.map(()=>50),t:A.map(()=>false),f2:A.map(()=>""),f3:A.map(()=>""),f4:A.map(()=>""),ideas:A.map(()=>[]),cur:-1};
+let xBuilt=-1;
+const xsel=()=>A.map((_,i)=>i).filter(i=>X.sel[i]);
+const pn=(i,p)=>p?A[i].r:A[i].l;
+const xq=i=>lvl(X.v[i])!==2?A[i].q[X.v[i]<50?0:1]:`Dans quelle situation récente aurais-tu gagné à privilégier davantage l’une des deux valeurs de cet axe (${A[i].l.toLowerCase()} ou ${A[i].r.toLowerCase()}) ?`;
+const hasX=(i,p,k)=>X.ideas[i].some(x=>x.p===p&&x.k===k);
+function xIdeas(i){
+ const r=[0,1,2,3,4];
+ if(lvl(X.v[i])===2)return [0,1].flatMap(p=>r.map(k=>({p,k,tag:`Consolider un équilibre · ${A[i].l} ↔ ${A[i].r}`})));
+ const pref=X.v[i]<50?0:1,oth=1-pref;
+ return r.map(k=>({p:oth,k,tag:"Explorer · "+pn(i,oth)})).concat(r.map(k=>({p:pref,k,tag:"Consolider · "+pn(i,pref)})));
+}
+function buildXChooser(){
+ $("xch").innerHTML=A.map((a,i)=>`<label class="xc${X.sel[i]?" on":""}" style="--c:${a.c}"><input type="checkbox" data-x="${i}"${X.sel[i]?" checked":""}><span><strong>${a.l} ↔ ${a.r}</strong><small>${a.d}</small></span></label>`).join("");
+ $("xch").querySelectorAll("input").forEach(inp=>inp.onchange=()=>{const i=+inp.dataset.x;
+  X.sel[i]=inp.checked;inp.closest("label").classList.toggle("on",inp.checked);
+  if(inp.checked&&X.cur<0)X.cur=i;xBuilt=-1;xrender();});
+}
+function xrender(){
+ const s=xsel(),ok=!!S.name&&s.length>0;
+ $("xgate").hidden=!!S.name;$("xmain").hidden=!ok;
+ if(!ok)return;
+ if(!s.includes(X.cur))X.cur=s[0];
+ renderXNav();
+ if(xBuilt!==X.cur)buildXPanel(X.cur);
+}
+function renderXNav(){
+ $("xnav").innerHTML=xsel().map(i=>`<button type="button" style="--c:${A[i].c}" data-x="${i}"${i===X.cur?' aria-current="true"':""}>${X.t[i]?"✓ ":""}${A[i].l} ↔ ${A[i].r}</button>`).join("");
+ $("xnav").querySelectorAll("button").forEach(b=>b.onclick=()=>selectX(+b.dataset.x));
+}
+function selectX(i){X.cur=i;renderXNav();buildXPanel(i);$("xnav").scrollIntoView({behavior:"smooth",block:"start"});}
+function buildXPanel(i){
+ xBuilt=i;
+ const a=A[i],s=xsel(),n=s.indexOf(i);
+ $("xpanel").innerHTML=`
+ <h2>Étape 1 · Je me positionne</h2>
+ <div class="ax${X.t[i]?" done":""}" id="xax" style="--c:${a.c}">
+  <div class="ends"><span><span class="ico" aria-hidden="true">${a.i[0]}</span>${a.l}</span><span class="r"><span class="ico" aria-hidden="true">${a.i[1]}</span>${a.r}</span></div>
+  <input type="range" id="xr" min="0" max="100" step="1" value="${X.v[i]}" aria-label="${esc(a.l)} ou ${esc(a.r)}" aria-describedby="xge" aria-valuetext="${X.t[i]?esc(a.g[lvl(X.v[i])][0]):"pas encore renseigné"}">
+  <div class="gscale" role="group" aria-label="Cinq repères">${[0,25,50,75,100].map((p,k)=>`<button type="button" class="gb" id="xg${k}" style="left:calc(15px + (100% - 30px) * ${p/100})" title="${esc(a.g[k][0])}" aria-label="${esc(a.g[k][0])}">${GL[k]}</button>`).join("")}</div>
+  <p class="gexp" id="xge" aria-live="polite"></p>
+  <p class="d">${a.d}</p>
+  <button class="mid sec" type="button" id="xm">Je choisis l’équilibre</button>
+ </div>
+ <div id="xrest"${X.t[i]?"":" hidden"}>
+  <h2>Étape 2 · Mon portrait sur cet axe</h2>
+  <div class="card" id="xport"></div>
+  <div class="card"><p style="margin-top:0"><strong>Une question pour toi :</strong></p><p id="xq" style="font-size:1.1rem;margin-bottom:0"></p></div>
+  <h2>Étape 3 · Des idées pour faire bouger mon curseur</h2>
+  <div class="card">
+   <p style="margin-top:0">Voici des actions concrètes pour cet axe. Retiens celles qui te donnent envie d’essayer : elles s’ajoutent à ton intention, que tu peux modifier librement.</p>
+   <div class="ideas" id="xideas" role="group" aria-label="Idées pour cet axe"></div>
+   <p class="note">Ces idées sont des pistes, pas des corrections. Tu peux aussi les ignorer.</p>
+  </div>
+  <h2>Étape 4 · Mon prochain petit pas</h2>
+  <div class="card">
+   <div class="chosen" id="xchosen" hidden></div>
+   <details class="aide">
+    <summary>Besoin d’aide pour formuler ton intention ?</summary>
+    <p>Une intention concrète répond à trois questions : <strong>Quoi ?</strong> (une action simple), <strong>Quand ?</strong> (dans quelle leçon ou sur quelle période) et <strong>Pourquoi ?</strong> (ce que j’espère faire évoluer chez mes élèves).</p>
+    <div class="chips">
+     <button type="button" class="sec" data-xins="Dans les prochains jours, je vais ">Dans les prochains jours, je vais…</button>
+     <button type="button" class="sec" data-xins="Pendant une leçon de ">Pendant une leçon de…</button>
+     <button type="button" class="sec" data-xins="Je vais proposer aux élèves de ">Je vais proposer aux élèves de…</button>
+     <button type="button" class="sec" data-xins="Je commencerai par ">Je commencerai par…</button>
+     <button type="button" class="sec" data-xins="afin de ">…afin de…</button>
+     <button type="button" class="sec" data-xins="Dans [une leçon ou une période], je vais [action concrète] avec mes élèves, afin de [ce que j’espère faire évoluer].">Modèle complet</button>
+    </div>
+   </details>
+   <label for="xf2">Mon intention pédagogique</label>
+   <textarea id="xf2" placeholder="Par exemple : Je souhaite laisser davantage de choix aux élèves dans la manière de réaliser une activité, tout en clarifiant les objectifs attendus."></textarea>
+   <label for="xf3">Comment saurai-je que mon expérimentation a été utile ? (facultatif)</label>
+   <textarea id="xf3" placeholder="Par exemple : Les élèves font des choix plus autonomes et sont capables d’expliquer les raisons de leurs décisions."></textarea>
+   <label for="xf4">Après mon expérimentation : qu’ai-je observé ? Qu’est-ce que je garde, j’ajuste ou j’abandonne ? (facultatif)</label>
+   <textarea id="xf4" placeholder="À compléter plus tard, une fois l’expérimentation menée en classe."></textarea>
+  </div>
+ </div>
+ <p class="noprint">${n>0?`<button type="button" class="sec" id="xprev">← ${A[s[n-1]].l} ↔ ${A[s[n-1]].r}</button>`:""}${n<s.length-1?`<button type="button" id="xnext">${A[s[n+1]].l} ↔ ${A[s[n+1]].r} →</button>`:""}</p>`;
+ // curseur
+ const r=$("xr");
+ const gexpX=k=>{$("xge").innerHTML=k===null?"Déplace le curseur ou clique sur un repère : son explication s’affiche ici.":`<strong>${a.g[k][0]}</strong> — ${a.g[k][1]}`;};
+ const grX=()=>{const k=X.t[i]?lvl(X.v[i]):null;for(let j=0;j<5;j++){const b=$("xg"+j);b.classList.toggle("on",j===k);b.setAttribute("aria-pressed",j===k?"true":"false");}gexpX(k);};
+ const mark=()=>{X.v[i]=+r.value;X.t[i]=true;$("xax").classList.add("done");r.setAttribute("aria-valuetext",a.g[lvl(X.v[i])][0]);grX();$("xrest").hidden=false;refreshX(i);renderXNav();};
+ r.addEventListener("input",mark);r.addEventListener("change",mark);
+ r.addEventListener("pointerdown",()=>{if(!X.t[i])mark();});
+ $("xm").onclick=()=>{r.value=50;mark();};
+ for(let k=0;k<5;k++){const b=$("xg"+k);
+  b.onclick=()=>{r.value=[0,25,50,75,100][k];mark();};
+  b.onmouseenter=b.onfocus=()=>gexpX(k);
+  b.onmouseleave=b.onblur=()=>gexpX(X.t[i]?lvl(X.v[i]):null);}
+ grX();
+ // textes
+ [["xf2","f2"],["xf3","f3"],["xf4","f4"]].forEach(([id,key])=>{$(id).value=X[key][i];$(id).oninput=e=>{X[key][i]=e.target.value;};});
+ document.querySelectorAll("[data-xins]").forEach(b=>b.onclick=()=>{const ta=$("xf2");
+  if(ta.value&&!/\s$/.test(ta.value))ta.value+=" ";
+  ta.value+=b.dataset.xins;X.f2[i]=ta.value;ta.focus();ta.setSelectionRange(ta.value.length,ta.value.length);});
+ if($("xprev"))$("xprev").onclick=()=>selectX(s[n-1]);
+ if($("xnext"))$("xnext").onclick=()=>selectX(s[n+1]);
+ if(X.t[i])refreshX(i);
+}
+function refreshX(i){
+ const a=A[i],l=lvl(X.v[i]);
+ $("xport").innerHTML=`<div class="row" style="--c:${a.c}"><div class="lbl"><span>${a.l}</span><span>${a.r}</span></div><div class="trk" role="img" aria-label="${esc(a.l)} – ${esc(a.r)} : ${a.g[l][0]}"><b style="left:${Math.min(97,Math.max(3,X.v[i]))}%"></b></div></div><div class="com" style="--c:${a.c}"><h3>${a.g[l][0]}</h3><p>${a.t[l]}</p><p class="ex"><strong>Exemple de pratique :</strong> ${a.e[l]}</p></div><p class="note">Cette boussole reflète tes préférences du moment. Elle ne constitue ni une évaluation ni un diagnostic professionnel.</p>`;
+ $("xq").textContent=xq(i);
+ renderXIdeas(i);renderXChosen(i);
+}
+function renderXIdeas(i){
+ const list=$("xideas");
+ list.innerHTML=xIdeas(i).map(x=>{const a=B[i][x.p][x.k],done=hasX(i,x.p,x.k);
+  return `<article class="idea${done?" done":""}" style="--c:${A[i].c}" data-p="${x.p}" data-k="${x.k}"><label><input type="radio" class="sr" name="xidea"><span class="tg">${esc(x.tag)}</span><strong class="tt">${esc(a.t)}</strong><span class="df">${esc(a.d)}</span><span class="ob"><em>Tu pourrais observer :</em> ${esc(a.o)}</span></label><button type="button" class="choose">${done?"Retirer cette idée":"Je choisis cette idée"}</button>${done?`<span class="badge">Idée retenue</span>`:""}</article>`;}).join("");
+ list.querySelectorAll("article").forEach(ar=>{
+  ar.querySelector("input").onchange=()=>{list.querySelectorAll("article").forEach(x=>x.classList.remove("sel"));ar.classList.add("sel");};
+  ar.querySelector(".choose").onclick=()=>toggleXIdea(i,+ar.dataset.p,+ar.dataset.k);
+ });
+}
+function toggleXIdea(i,p,k){
+ if(hasX(i,p,k))X.ideas[i]=X.ideas[i].filter(x=>!(x.p===p&&x.k===k));
+ else{const a=B[i][p][k],txt=`Je souhaite expérimenter l’idée « ${a.t} » : ${lc(a.d)}`;
+  X.ideas[i].push({p,k});
+  X.f2[i]=X.f2[i].trim()?X.f2[i].replace(/\s+$/,"")+"\n"+txt:txt;$("xf2").value=X.f2[i];}
+ renderXChosen(i);renderXIdeas(i);
+}
+function renderXChosen(i){
+ const c=$("xchosen"),L=X.ideas[i];
+ if(!L.length){c.hidden=true;c.innerHTML="";return;}
+ c.hidden=false;
+ c.innerHTML=`<p><strong>${L.length>1?"Idées retenues":"Idée retenue"} :</strong></p>`+L.map((x,n)=>{const a=B[i][x.p][x.k];
+  return `<div class="chI"><p><strong>« ${esc(a.t)} »</strong></p><p>${esc(a.d)}</p><p><em>Tu pourrais observer :</em> ${esc(a.o)}</p><div><button type="button" class="sec" data-use="${n}">Ajouter à mon indice de réussite</button><button type="button" class="sec" data-drop="${n}">Ne plus retenir cette idée</button></div></div>`;}).join("");
+ c.querySelectorAll("[data-use]").forEach(b=>b.onclick=()=>{const x=L[+b.dataset.use],a=B[i][x.p][x.k];
+  const txt=a.o.charAt(0).toUpperCase()+a.o.slice(1);
+  X.f3[i]=X.f3[i].trim()?X.f3[i].replace(/\s+$/,"")+"\n"+txt:txt;$("xf3").value=X.f3[i];});
+ c.querySelectorAll("[data-drop]").forEach(b=>b.onclick=()=>{X.ideas[i].splice(+b.dataset.drop,1);renderXChosen(i);renderXIdeas(i);});
+}
+function buildXPrint(){
+ const d=xsel().filter(i=>X.t[i]);
+ const date=new Date().toLocaleDateString("fr-CH",{day:"numeric",month:"long",year:"numeric"});
+ let h=`<div class="phead"><strong>MA BOUSSOLE PÉDAGOGIQUE</strong> — ${esc(S.name)} — ${date}</div><h1>La boussole pédagogique de ${esc(S.name)}</h1><p class="sub">${d.length>1?"Axes explorés":"Axe exploré"} : ${d.map(i=>esc(A[i].l+" ↔ "+A[i].r)).join(" ; ")}</p>`;
+ d.forEach(i=>{const a=A[i],l=lvl(X.v[i]);
+  h+=`<div class="card" style="--c:${a.c}"><h2 style="margin-top:0">${a.l} ↔ ${a.r}</h2>
+  <div class="row"><div class="lbl"><span>${a.l}</span><span>${a.r}</span></div><div class="trk"><b style="left:${Math.min(97,Math.max(3,X.v[i]))}%"></b></div></div>
+  <div class="full"><div class="com"><h3>${a.g[l][0]}</h3><p>${a.t[l]}</p><p class="ex"><strong>Exemple de pratique :</strong> ${a.e[l]}</p></div><p><strong>Une question pour toi :</strong> ${esc(xq(i))}</p></div>
+  <h3>MON PROCHAIN PETIT PAS</h3>`;
+  if(X.ideas[i].length)h+=`<div class="chosen"><p><strong>${X.ideas[i].length>1?"Idées retenues":"Idée retenue"} :</strong></p>`+X.ideas[i].map(x=>{const b=B[i][x.p][x.k];return `<div class="chI"><p><strong>« ${esc(b.t)} »</strong> — ${esc(b.d)}</p><p><em>Tu pourrais observer :</em> ${esc(b.o)}</p></div>`;}).join("")+`</div>`;
+  h+=`<p><strong>Mon intention pédagogique</strong></p><div class="pbox">${esc(X.f2[i])}</div>
+  <p><strong>Comment saurai-je que mon expérimentation a été utile ?</strong></p><div class="pbox">${esc(X.f3[i])}</div>
+  <div class="full"><p><strong>Après mon expérimentation</strong></p><div class="pbox" style="min-height:90px">${esc(X.f4[i])}</div></div></div>`;});
+ h+=`<p class="note">Cette boussole reflète tes préférences du moment. Elle ne constitue ni une évaluation ni un diagnostic professionnel.</p><div class="quote">« Ma boussole n’indique pas où je dois être, mais m’aide à réfléchir à la direction que je souhaite prendre. »</div>`;
+ $("xprint").innerHTML=h;
+}
+function doPrintX(mode){
+ if(!xsel().some(i=>X.t[i])){alert("Positionne d’abord au moins un curseur pour obtenir un document.");return;}
+ buildXPrint();
+ const old=document.title;document.title="Ma boussole pédagogique – "+S.name;
+ document.body.classList.add("xp");document.body.classList.toggle("short",mode==="short");
+ const done=()=>{document.body.classList.remove("xp","short");document.title=old;window.removeEventListener("afterprint",done);};
+ window.addEventListener("afterprint",done);
+ window.print();
+}
+$("xpdf").onclick=()=>doPrintX("full");
+$("xpdfs").onclick=()=>doPrintX("short");
+$("xprt").onclick=()=>doPrintX("full");
+$("xrst").onclick=()=>{if(!confirm("Effacer tout ce qui a été fait dans cet onglet ? (Ton prénom est conservé.)"))return;
+ X.sel=A.map(()=>false);X.v=A.map(()=>50);X.t=A.map(()=>false);X.f2=A.map(()=>"");X.f3=A.map(()=>"");X.f4=A.map(()=>"");X.ideas=A.map(()=>[]);X.cur=-1;xBuilt=-1;
+ buildXChooser();xrender();window.scrollTo(0,0);};
+$("xname").addEventListener("input",e=>{const had=!!S.name;S.name=e.target.value.trim();updNav();
+ $("xgate").hidden=!!S.name;$("xmain").hidden=!(S.name&&xsel().length);
+ if(!had&&S.name)xrender();});
+function setTab(n){
+ document.querySelectorAll(".tabs button").forEach(b=>{const on=+b.dataset.t===n;b.classList.toggle("on",on);b.setAttribute("aria-selected",on?"true":"false");});
+ $("stepsnav").hidden=n!==1;
+ if(n===1)go(cur);else{$("xname").value=S.name;xBuilt=-1;xrender();show("sx");}
+}
+document.querySelectorAll(".tabs button").forEach(b=>b.onclick=()=>setTab(+b.dataset.t));
+buildXChooser();
+
+buildAxes();updNav();
+</script>
+</body>
+</html>
